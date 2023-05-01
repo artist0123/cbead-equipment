@@ -49,7 +49,7 @@ app.get("/equipment/:id", (req, res) => {
 
   dynamoDb.get(params, (error, data) => {
     if (error) {
-      res.status(500).json({ error: "Error fetching equipment" });
+      res.status(500).json({ error: "Error fetching equipment" + error });
     } else {
       res.json(data.Item);
     }
@@ -72,7 +72,7 @@ app.post("/equipment", (req, res) => {
 
   dynamoDb.put(params, (error) => {
     if (error) {
-      res.status(500).json({ error: "Error adding equipment" });
+      res.status(500).json({ error: "Error adding equipment" + error});
     } else {
       res.json(params.Item);
     }
@@ -100,7 +100,7 @@ app.put("/equipment/:id", (req, res) => {
 
   dynamoDb.update(params, (error, data) => {
     if (error) {
-      res.status(500).json({ error: "Error updating equipment" });
+      res.status(500).json({ error: "Error updating equipment" + error});
     } else {
       res.json(data.Attributes);
     }
@@ -118,7 +118,7 @@ app.delete("/equipment/:id", (req, res) => {
 
   dynamoDb.delete(params, (error) => {
     if (error) {
-      res.status(500).json({ error: "Error deleting equipment" });
+      res.status(500).json({ error: "Error deleting equipment" + error});
     } else {
       res.json({ success: true });
     }
