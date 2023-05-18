@@ -17,98 +17,131 @@ AWS.config.update({
   region: "us-east-1",
 });
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const tableName = "equipments";
 
 // Define your API routes here
 // ... (previous code)
 
 // List all equipment
-app.get("/equipment", (req, res) => {
+app.post("/equipment", async (req, res) => {
+  const item = req.body;
+  item.id = item._id;
+  delete item._id;
+
   const params = {
     TableName: tableName,
+    Item: item,
   };
 
-  dynamoDb.scan(params, (error, data) => {
-    if (error) {
-      res.status(500).json({ error: "Error fetching equipment" + error });
-    } else {
-      res.json(data.Items);
-    }
-  });
+  try {
+    await dynamoDB.put(params).promise();
+    res.status(200).send(item.id);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-// Get a single equipment item by ID
-app.get("/equipment/:id", (req, res) => {
-  const params = {
-    TableName: tableName,
-    Key: {
-      id: req.params.id,
-    },
-  };
+app.post("/equipment/onReserveWorkspace", async (req, res) => {
+  const model = req.body;
+  let isDone = false;
 
-  dynamoDb.get(params, (error, data) => {
-    if (error) {
-      res.status(500).json({ error: "Error fetching equipment" + error });
-    } else {
-      res.json(data.Item);
+  const ids = Array.from(new Set(model.equipmentsId));
+  if (ids.length === 0) {
+    isDone = true;
+    res.status(200).send(isDone);
+    return;
+  }
+
+  for (let id of ids) {
+    const decrease = model.equipmentsId.filter((eid) => eid === id).length;
+
+    const params = {
+      TableName: tableName,
+      Key: { id: id },
+      UpdateExpression: "set quantity = quantity - :q",
+      ExpressionAttributeValues: {
+        ":q": decrease,
+      },
+      ReturnValues: "UPDATED_NEW",
+    };
+
+    try {
+      await dynamoDB.update(params).promise();
+      isDone = true;
+    } catch (error) {
+      res.status(500).send(error.message);
+      return;
     }
-  });
+  }
+
+  res.status(200).send(isDone);
 });
 
-// Add a new equipment item
-app.post("/equipment", (req, res) => {
-  const { id, name, available, price } = req.body;
+app.post("/equipment/onCancelReserve", async (req, res) => {
+  const model = req.body;
+  let isDone = false;
 
-  const params = {
-    TableName: tableName,
-    Item: {
-      id,
-      name,
-      available,
-      price,
-    },
-  };
+  const ids = Array.from(new Set(model.equipmentsId));
+  if (ids.length === 0) {
+    isDone = true;
+    res.status(200).send(isDone);
+    return;
+  }
 
-  dynamoDb.put(params, (error) => {
-    if (error) {
-      res.status(500).json({ error: "Error adding equipment" + error});
-    } else {
-      res.json(params.Item);
+  for (let id of ids) {
+    const increase = model.equipmentsId.filter((eid) => eid === id).length;
+
+    const params = {
+      TableName: tableName,
+      Key: { id: id },
+      UpdateExpression: "set quantity = quantity + :q",
+      ExpressionAttributeValues: {
+        ":q": increase,
+      },
+      ReturnValues: "UPDATED_NEW",
+    };
+
+    try {
+      await dynamoDB.update(params).promise();
+      isDone = true;
+    } catch (error) {
+      res.status(500).send(error.message);
+      return;
     }
-  });
+  }
+
+  res.status(200).send(isDone);
 });
 
-// Update an equipment item
-app.put("/equipment/:id", (req, res) => {
-  const { name, price, available } = req.body;
+app.put("/equipment", async (req, res) => {
+  const item = req.body;
+  item.id = item._id;
+  delete item._id;
 
   const params = {
     TableName: tableName,
-    Key: {
-      id: req.params.id,
-    },
+    Key: { id: item.id },
     UpdateExpression:
-      "SET name = :name, price = :price, available = :available",
+      "set name=:name, desc=:desc, price=:price, quantity=:quantity",
     ExpressionAttributeValues: {
-      ":name": name,
-      ":price": price,
-      ":available": available,
+      ":name": item.name,
+      ":desc": item.desc,
+      ":price": item.price,
+      ":quantity": item.quantity,
     },
-    ReturnValues: "ALL_NEW",
+    ReturnValues: "UPDATED_NEW",
   };
 
-  dynamoDb.update(params, (error, data) => {
-    if (error) {
-      res.status(500).json({ error: "Error updating equipment" + error});
-    } else {
-      res.json(data.Attributes);
-    }
-  });
+  try {
+    await dynamoDB.update(params).promise();
+    res.status(200).send(item.id);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-// Delete an equipment item
-app.delete("/equipment/:id", (req, res) => {
+app.delete("/equipment/:id", async (req, res) => {
   const params = {
     TableName: tableName,
     Key: {
@@ -116,17 +149,12 @@ app.delete("/equipment/:id", (req, res) => {
     },
   };
 
-  dynamoDb.delete(params, (error) => {
-    if (error) {
-      res.status(500).json({ error: "Error deleting equipment" + error});
-    } else {
-      res.json({ success: true });
-    }
-  });
+  try {
+    await dynamoDB.delete(params).promise();
+    res.status(200).send(req.params.id);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-// ... (previous code)
-
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server is running on port ${port}`);
-});
+app.listen(port, () => console.log(`Server is running on port ${port}`));
