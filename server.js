@@ -20,10 +20,58 @@ AWS.config.update({
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const tableName = "equipments";
 
-// Define your API routes here
-// ... (previous code)
+app.get('/equipments', async (req, res) => {
+  const params = {
+      TableName: tableName,  // Replace with your actual DynamoDB table name
+  };
 
-// List all equipment
+  try {
+      const data = await dynamodb.scan(params).promise();
+      res.json(data.Items);
+  } catch (err) {
+      res.status(500).json({ error: err.toString() });
+  }
+});
+
+app.get('/equipment', async (req, res) => {
+  const equipmentId = req.query.id;
+
+  const params = {
+      TableName: tableName,  // Replace with your actual DynamoDB table name
+      Key: {
+          id: equipmentId,
+      },
+  };
+
+  try {
+      const data = await dynamodb.get(params).promise();
+      res.json(data.Item);
+  } catch (err) {
+      res.status(500).json({ error: err.toString() });
+  }
+});
+
+app.get('/equipments/ids', async (req, res) => {
+  const ids = req.query.ids.split(',');
+
+  const keys = ids.map(id => ({ id }));
+
+  const params = {
+      RequestItems: {
+          'EquipmentTable': {  // Replace with your actual DynamoDB table name
+              Keys: keys,
+          },
+      },
+  };
+
+  try {
+      const data = await dynamodb.batchGet(params).promise();
+      res.json(data.Responses.EquipmentTable);
+  } catch (err) {
+      res.status(500).json({ error: err.toString() });
+  }
+});
+
 app.post("/equipment", async (req, res) => {
   const item = req.body;
   item.id = item._id;
