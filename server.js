@@ -26,7 +26,7 @@ app.get('/equipments', async (req, res) => {
   };
 
   try {
-      const data = await dynamodb.scan(params).promise();
+      const data = await dynamoDB.scan(params).promise();
       res.json(data.Items);
   } catch (err) {
       res.status(500).json({ error: err.toString() });
@@ -44,7 +44,7 @@ app.get('/equipment', async (req, res) => {
   };
 
   try {
-      const data = await dynamodb.get(params).promise();
+      const data = await dynamoDB.get(params).promise();
       res.json(data.Item);
   } catch (err) {
       res.status(500).json({ error: err.toString() });
@@ -65,7 +65,7 @@ app.get('/equipments/ids', async (req, res) => {
   };
 
   try {
-      const data = await dynamodb.batchGet(params).promise();
+      const data = await dynamoDB.batchGet(params).promise();
       res.json(data.Responses.EquipmentTable);
   } catch (err) {
       res.status(500).json({ error: err.toString() });
