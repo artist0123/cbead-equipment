@@ -58,7 +58,7 @@ app.get('/equipments/ids', async (req, res) => {
 
   const params = {
       RequestItems: {
-          'EquipmentTable': {  // Replace with your actual DynamoDB table name
+          'equipments': {  // Replace with your actual DynamoDB table name
               Keys: keys,
           },
       },
