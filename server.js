@@ -171,12 +171,16 @@ app.put("/equipment", async (req, res) => {
     TableName: tableName,
     Key: { id: item.id },
     UpdateExpression:
-      "set name=:name, desc=:desc, price=:price, quantity=:quantity",
+      "set #na=:name, #dsc=:desc, price=:price, quantity=:quantity",
     ExpressionAttributeValues: {
       ":name": item.name,
       ":desc": item.desc,
       ":price": item.price,
       ":quantity": item.quantity,
+    },
+    ExpressionAttributeNames: {
+      "#dsc": "desc",
+      "#na":"name"
     },
     ReturnValues: "UPDATED_NEW",
   };
