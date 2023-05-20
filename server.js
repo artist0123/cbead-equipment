@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const AWS = require("aws-sdk");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -33,8 +34,9 @@ app.get('/equipments', async (req, res) => {
   }
 });
 
-app.get('/equipment', async (req, res) => {
-  const equipmentId = req.query.id;
+//by id
+app.get('/equipment/:id', async (req, res) => {
+  const equipmentId = req.params.id;
 
   const params = {
       TableName: tableName,  // Replace with your actual DynamoDB table name
@@ -55,10 +57,14 @@ app.get('/equipments/ids', async (req, res) => {
   const ids = req.query.ids.split(',');
 
   const keys = ids.map(id => ({ id }));
-
+  console.log(keys);
   const params = {
       RequestItems: {
+<<<<<<< Updated upstream
           'equipments': {  // Replace with your actual DynamoDB table name
+=======
+          tableName: {  // Replace with your actual DynamoDB table name
+>>>>>>> Stashed changes
               Keys: keys,
           },
       },
@@ -74,12 +80,10 @@ app.get('/equipments/ids', async (req, res) => {
 
 app.post("/equipment", async (req, res) => {
   const item = req.body;
-  item.id = item._id;
-  delete item._id;
 
   const params = {
     TableName: tableName,
-    Item: item,
+    Item: {id: uuidv4(), ...item},
   };
 
   try {
@@ -162,16 +166,24 @@ app.post("/equipment/onCancelReserve", async (req, res) => {
   res.status(200).send(isDone);
 });
 
-app.put("/equipment", async (req, res) => {
+app.put("/equipment/:id", async (req, res) => {
   const item = req.body;
   item.id = item._id;
   delete item._id;
 
   const params = {
     TableName: tableName,
-    Key: { id: item.id },
+    Key: { id: req.params.id },
     UpdateExpression:
+<<<<<<< Updated upstream
       "set #na=:name, #dsc=:desc, price=:price, quantity=:quantity",
+=======
+      "set #nme=:name, #dsc=:desc, price=:price, quantity=:quantity",
+    ExpressionAttributeNames: {
+      "#dsc": "desc",
+      "#nme": "name",
+    },
+>>>>>>> Stashed changes
     ExpressionAttributeValues: {
       ":name": item.name,
       ":desc": item.desc,
@@ -209,4 +221,4 @@ app.delete("/equipment/:id", async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`Server is running on port ${port}`));
+app.listen(3000, () => console.log(`Server is running on port ${port}`));
