@@ -60,11 +60,7 @@ app.get('/equipments/ids', async (req, res) => {
   console.log(keys);
   const params = {
       RequestItems: {
-<<<<<<< Updated upstream
-          'equipments': {  // Replace with your actual DynamoDB table name
-=======
           tableName: {  // Replace with your actual DynamoDB table name
->>>>>>> Stashed changes
               Keys: keys,
           },
       },
@@ -175,15 +171,11 @@ app.put("/equipment/:id", async (req, res) => {
     TableName: tableName,
     Key: { id: req.params.id },
     UpdateExpression:
-<<<<<<< Updated upstream
-      "set #na=:name, #dsc=:desc, price=:price, quantity=:quantity",
-=======
       "set #nme=:name, #dsc=:desc, price=:price, quantity=:quantity",
     ExpressionAttributeNames: {
       "#dsc": "desc",
       "#nme": "name",
     },
->>>>>>> Stashed changes
     ExpressionAttributeValues: {
       ":name": item.name,
       ":desc": item.desc,
